@@ -1,17 +1,15 @@
-
 import React from 'react';
 import { 
   BookOpen, 
-  Presentation, 
+  Monitor, 
   Smartphone, 
   Utensils, 
   Bed, 
   Zap, 
-  Briefcase 
+  MoreHorizontal 
 } from 'lucide-react';
 import { ActivityType } from './types';
 
-// Provided Logo Image URL
 export const APP_LOGO_URL = "https://i.ibb.co.com/DPq766Xs/Blue-Black-Study-Book-Logo.png";
 
 export const AppLogo = ({ size = 40, className = "" }: { size?: number, className?: string }) => (
@@ -23,8 +21,7 @@ export const AppLogo = ({ size = 40, className = "" }: { size?: number, classNam
   />
 );
 
-// Custom Mosque Icon SVG
-const MosqueIcon = ({ size = 32 }: { size?: number }) => (
+const MosqueIcon = ({ size = 28 }: { size?: number }) => (
   <svg 
     width={size} 
     height={size} 
@@ -40,21 +37,19 @@ const MosqueIcon = ({ size = 32 }: { size?: number }) => (
     <path d="M4 14v8" />
     <path d="M20 14v8" />
     <path d="M2 22h20" />
-    <path d="M4 14a2 2 0 1 1 0-4 2 2 0 1 1 0 4Z" />
-    <path d="M20 14a2 2 0 1 1 0-4 2 2 0 1 1 0 4Z" />
     <path d="M8 22v-4a4 4 0 1 1 8 0v4" />
   </svg>
 );
 
 export const ACTIVITIES_CONFIG: { id: ActivityType; label: string; icon: React.ReactNode }[] = [
   { id: 'self_study', label: 'Self Study', icon: <BookOpen size={28} strokeWidth={2.5} /> },
-  { id: 'class', label: 'Class', icon: <Presentation size={28} strokeWidth={2.5} /> },
+  { id: 'class', label: 'Class', icon: <Monitor size={28} strokeWidth={2.5} /> },
   { id: 'mobile_scroll', label: 'Mobile scroll', icon: <Smartphone size={28} strokeWidth={2.5} /> },
   { id: 'prayer', label: 'Prayer', icon: <MosqueIcon size={28} /> },
   { id: 'food', label: 'Food', icon: <Utensils size={28} strokeWidth={2.5} /> },
   { id: 'sleep', label: 'Sleep', icon: <Bed size={28} strokeWidth={2.5} /> },
   { id: 'sports', label: 'Sports', icon: <Zap size={28} strokeWidth={2.5} /> },
-  { id: 'other', label: 'Other', icon: <Briefcase size={28} strokeWidth={2.5} /> },
+  { id: 'other', label: 'Other', icon: <MoreHorizontal size={28} strokeWidth={2.5} /> },
 ];
 
 export const PRAYER_LABELS = [
