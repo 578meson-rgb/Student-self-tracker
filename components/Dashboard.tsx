@@ -1,5 +1,5 @@
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { DayData, ActivityType } from '../types';
 import { ACTIVITIES_CONFIG, PRAYER_LABELS } from '../constants';
 import { formatDurationBrief } from '../utils/formatters';
@@ -24,7 +24,7 @@ const Dashboard: React.FC<DashboardProps> = ({ history, selectedDate, onDateChan
       const val = data.activities[act.id] || 0;
       return {
         name: act.label,
-        value: Math.round((val / 60) * 10) / 10, // minutes with one decimal
+        value: Math.round((val / 60) * 10) / 10, // minutes
         color: COLORS[index % COLORS.length]
       };
     })
@@ -91,7 +91,7 @@ const Dashboard: React.FC<DashboardProps> = ({ history, selectedDate, onDateChan
                   ))}
                 </Pie>
                 <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontVariantNumeric: 'tabular-nums' }}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                   formatter={(value: number) => [`${value} min`, 'Duration']}
                 />
               </PieChart>
@@ -118,8 +118,8 @@ const Dashboard: React.FC<DashboardProps> = ({ history, selectedDate, onDateChan
       ) : (
         <div className="bg-white p-16 rounded-3xl border border-slate-100 shadow-sm text-center space-y-2">
           <div className="text-4xl">📊</div>
-          <p className="text-slate-400 font-bold text-sm">এই দিনে কোনো তথ্য রেকর্ড করা হয়নি।</p>
-          <p className="text-slate-300 text-xs">অ্যাক্টিভিটি ট্র্যাক করা শুরু করলে এখানে চার্ট দেখা যাবে।</p>
+          <p className="text-slate-400 font-bold text-sm">No records found for this day.</p>
+          <p className="text-slate-300 text-xs">Start tracking your activity to see the breakdown.</p>
         </div>
       )}
 
@@ -134,7 +134,7 @@ const Dashboard: React.FC<DashboardProps> = ({ history, selectedDate, onDateChan
               }`}
             >
               {p.label}
-              <div className={`mt-1 text-base ${data.prayers[p.id] ? 'animate-bounce' : ''}`}>
+              <div className="mt-1 text-base">
                 {data.prayers[p.id] ? '✓' : '✗'}
               </div>
             </div>

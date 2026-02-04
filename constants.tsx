@@ -53,9 +53,9 @@ export const ACTIVITIES_CONFIG: { id: ActivityType; label: string; icon: React.R
 ];
 
 export const PRAYER_LABELS = [
-  { id: 'fajr', label: 'ফজর' },
-  { id: 'dhuhr', label: 'যোহর' },
-  { id: 'asr', label: 'আসর' },
-  { id: 'maghrib', label: 'মাগ.' },
-  { id: 'isha', label: 'এশা' },
+  { id: 'fajr', label: 'Fajr' },
+  { id: 'dhuhr', label: 'Dhuhr' },
+  { id: 'asr', label: 'Asr' },
+  { id: 'maghrib', label: 'Maghrib' },
+  { id: 'isha', label: 'Isha' },
 ] as const;

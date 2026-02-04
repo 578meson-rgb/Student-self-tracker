@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PRAYER_LABELS } from '../constants';
 import { PrayerStatus } from '../types';
@@ -12,7 +11,7 @@ const PrayerTracker: React.FC<PrayerTrackerProps> = ({ status, onChange }) => {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-4">
       <h3 className="text-slate-700 font-bold flex items-center gap-2">
-        নামাজ ট্র্যাকিং
+        Prayer Tracking
       </h3>
       <div className="flex justify-between gap-2">
         {PRAYER_LABELS.map((p) => (

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
 import { User, GraduationCap, Save } from 'lucide-react';
@@ -25,14 +24,14 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({ profile, onSave }) =>
         <div className="w-20 h-20 bg-blue-600 rounded-full mx-auto flex items-center justify-center text-white text-3xl font-bold shadow-lg shadow-blue-100">
           {name ? name[0].toUpperCase() : <User size={32} />}
         </div>
-        <h2 className="text-2xl font-bold text-slate-800">আপনার প্রোফাইল</h2>
-        <p className="text-slate-400 text-sm font-medium">আপনার নাম এবং ক্লাস যুক্ত করুন</p>
+        <h2 className="text-2xl font-bold text-slate-800">Your Profile</h2>
+        <p className="text-slate-400 text-sm font-medium">Add your name and class</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-1.5">
           <label className="text-sm font-bold text-slate-500 flex items-center gap-2">
-            <User size={14} /> পূর্ণ নাম
+            <User size={14} /> Full Name
           </label>
           <input 
             type="text" 
@@ -46,7 +45,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({ profile, onSave }) =>
 
         <div className="space-y-1.5">
           <label className="text-sm font-bold text-slate-500 flex items-center gap-2">
-            <GraduationCap size={14} /> বর্তমান ক্লাস
+            <GraduationCap size={14} /> Current Class
           </label>
           <input 
             type="text" 
@@ -62,7 +61,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({ profile, onSave }) =>
           type="submit"
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95"
         >
-          <Save size={18} /> সেভ করুন
+          <Save size={18} /> Save Profile
         </button>
       </form>
     </div>

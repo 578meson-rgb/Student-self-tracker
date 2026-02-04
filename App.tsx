@@ -83,7 +83,8 @@ const App: React.FC = () => {
   }, [activeActivity]);
 
   const currentDayData = history[getTodayKey()] || INITIAL_DAY_DATA;
-  const totalTrackedSeconds = Object.values(currentDayData.activities).reduce((a, b) => a + b, 0);
+  // Fix: Explicitly cast Object.values to number[] and type reduce params to resolve unknown + unknown error
+  const totalTrackedSeconds = (Object.values(currentDayData.activities) as number[]).reduce((a: number, b: number) => a + b, 0);
 
   const handleToggleActivity = (id: ActivityType) => {
     setActiveActivity(prev => (prev === id ? null : id));
@@ -104,7 +105,7 @@ const App: React.FC = () => {
   };
 
   const handleResetToday = () => {
-    if (window.confirm('আজকের ডাটা কি মুছে ফেলতে চান?')) {
+    if (window.confirm('Do you want to reset today\'s data?')) {
       const todayKey = getTodayKey();
       setHistory(prev => ({ ...prev, [todayKey]: { ...INITIAL_DAY_DATA } }));
       setActiveActivity(null);
@@ -116,32 +117,32 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-20 overflow-x-hidden selection:bg-blue-100 selection:text-blue-900 font-bn">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-20 overflow-x-hidden selection:bg-blue-100 selection:text-blue-900">
       <Header activeTab={view} onTabChange={setView} profile={profile} />
 
       <main className="max-w-xl mx-auto px-4 pt-8">
         {view === 'tracker' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-top-6 duration-700">
             <div className="text-center space-y-2">
-              <h1 className="text-4xl font-[900] text-[#0A1D47] tracking-tighter font-en italic uppercase">Study Tracker</h1>
+              <h1 className="text-4xl font-[900] text-[#0A1D47] tracking-tighter italic uppercase">Study Tracker</h1>
               {profile ? (
-                <p className="text-slate-500 font-medium text-lg font-bn flex items-center justify-center gap-2">
+                <p className="text-slate-500 font-medium text-lg flex items-center justify-center gap-2">
                   <span className="opacity-50">—</span> 
-                  স্বাগতম, <span className="text-blue-600 font-bold">{profile.name}</span> <span className="text-slate-400 font-normal">(Class {profile.studentClass})</span>
+                  Welcome, <span className="text-blue-600 font-bold">{profile.name}</span> <span className="text-slate-400 font-normal">(Class {profile.studentClass})</span>
                   <span className="opacity-50">—</span>
                 </p>
               ) : (
                 <button 
                   onClick={() => setView('profile')}
-                  className="text-blue-600 font-bold text-sm underline underline-offset-4 mt-2 transition-all hover:text-blue-700 font-bn"
+                  className="text-blue-600 font-bold text-sm underline underline-offset-4 mt-2 transition-all hover:text-blue-700"
                 >
-                  প্রোফাইল তৈরি করুন
+                  Create Your Profile
                 </button>
               )}
               
               <div className="pt-2 flex flex-col items-center">
                 <div className="bg-slate-100 px-4 py-1.5 rounded-full flex items-center gap-3">
-                   <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] font-en">Total Tracking Today</span>
+                   <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em]">Total Tracking Today</span>
                    <span className="w-px h-3 bg-slate-300"></span>
                    <span className="text-[13px] font-black text-[#0A1D47] font-mono tracking-wider tabular-nums">{formatTime(totalTrackedSeconds)}</span>
                 </div>
@@ -168,9 +169,9 @@ const App: React.FC = () => {
             <div className="pt-4">
               <button 
                 onClick={handleResetToday} 
-                className="group flex items-center gap-2 mx-auto text-[11px] text-slate-400 font-black hover:text-red-500 transition-all uppercase tracking-widest font-bn border border-transparent hover:border-red-100 hover:bg-red-50 px-4 py-2 rounded-lg"
+                className="group flex items-center gap-2 mx-auto text-[11px] text-slate-400 font-black hover:text-red-500 transition-all uppercase tracking-widest border border-transparent hover:border-red-100 hover:bg-red-50 px-4 py-2 rounded-lg"
               >
-                <span>আজকের ডাটা রিসেট করুন</span>
+                <span>Reset Today's Data</span>
               </button>
             </div>
           </div>
