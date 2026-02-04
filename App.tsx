@@ -116,29 +116,35 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-20">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-20 overflow-x-hidden selection:bg-blue-100 selection:text-blue-900 font-bn">
       <Header activeTab={view} onTabChange={setView} profile={profile} />
 
-      <main className="max-w-xl mx-auto px-4 pt-6">
+      <main className="max-w-xl mx-auto px-4 pt-8">
         {view === 'tracker' && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="text-center space-y-1">
-              <h1 className="text-3xl font-black text-[#0A1D47] tracking-tight font-en">STUDY TRACKER</h1>
+          <div className="space-y-8 animate-in fade-in slide-in-from-top-6 duration-700">
+            <div className="text-center space-y-2">
+              <h1 className="text-4xl font-[900] text-[#0A1D47] tracking-tighter font-en italic uppercase">Study Tracker</h1>
               {profile ? (
-                <p className="text-slate-500 font-semibold text-base font-bn">
-                  স্বাগতম, {profile.name} (Class {profile.studentClass})
+                <p className="text-slate-500 font-medium text-lg font-bn flex items-center justify-center gap-2">
+                  <span className="opacity-50">—</span> 
+                  স্বাগতম, <span className="text-blue-600 font-bold">{profile.name}</span> <span className="text-slate-400 font-normal">(Class {profile.studentClass})</span>
+                  <span className="opacity-50">—</span>
                 </p>
               ) : (
                 <button 
                   onClick={() => setView('profile')}
-                  className="text-blue-600 font-bold text-sm underline underline-offset-4 mt-2 transition-colors hover:text-blue-700 font-bn"
+                  className="text-blue-600 font-bold text-sm underline underline-offset-4 mt-2 transition-all hover:text-blue-700 font-bn"
                 >
                   প্রোফাইল তৈরি করুন
                 </button>
               )}
-              <div className="flex items-center justify-center gap-1.5 pt-1">
-                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest font-en">Total Time:</span>
-                 <span className="text-[11px] font-bold text-slate-600 font-en">{formatTime(totalTrackedSeconds)}</span>
+              
+              <div className="pt-2 flex flex-col items-center">
+                <div className="bg-slate-100 px-4 py-1.5 rounded-full flex items-center gap-3">
+                   <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] font-en">Total Tracking Today</span>
+                   <span className="w-px h-3 bg-slate-300"></span>
+                   <span className="text-[13px] font-black text-[#0A1D47] font-mono tracking-wider tabular-nums">{formatTime(totalTrackedSeconds)}</span>
+                </div>
               </div>
             </div>
 
@@ -159,14 +165,19 @@ const App: React.FC = () => {
               onChange={handlePrayerChange}
             />
 
-            <button onClick={handleResetToday} className="block mx-auto text-[11px] text-slate-400 font-bold mt-8 hover:text-red-500 transition-colors uppercase tracking-widest font-bn">
-              আজকের ডাটা রিসেট করুন
-            </button>
+            <div className="pt-4">
+              <button 
+                onClick={handleResetToday} 
+                className="group flex items-center gap-2 mx-auto text-[11px] text-slate-400 font-black hover:text-red-500 transition-all uppercase tracking-widest font-bn border border-transparent hover:border-red-100 hover:bg-red-50 px-4 py-2 rounded-lg"
+              >
+                <span>আজকের ডাটা রিসেট করুন</span>
+              </button>
+            </div>
           </div>
         )}
 
         {view === 'dashboard' && (
-          <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="animate-in fade-in slide-in-from-right-6 duration-500">
             <Dashboard 
               history={history} 
               selectedDate={selectedDate} 
@@ -176,7 +187,7 @@ const App: React.FC = () => {
         )}
 
         {view === 'profile' && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="animate-in fade-in slide-in-from-bottom-6 duration-500">
             <ProfileSettings 
               profile={profile} 
               onSave={(p) => { setProfile(p); setView('tracker'); }} 
