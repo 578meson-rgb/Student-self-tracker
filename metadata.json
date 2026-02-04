@@ -1,0 +1,5 @@
+{
+  "name": "Student Self-Tracker",
+  "description": "A comprehensive daily activity tracker for students to monitor study time, prayer, sleep, and other activities with a real-time dashboard.",
+  "requestFramePermissions": []
+}
