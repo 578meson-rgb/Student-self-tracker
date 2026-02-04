@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="bn">
   <head>
@@ -14,18 +13,19 @@
         --font-bn: 'Hind Siliguri', sans-serif;
         --font-en: 'Inter', sans-serif;
       }
+      * {
+        font-family: var(--font-bn) !important;
+      }
+      .font-en {
+        font-family: var(--font-en) !important;
+      }
+      .font-mono {
+        font-family: monospace !important;
+      }
       body {
-        /* Set Hind Siliguri as default to ensure Bangla displays properly by default */
-        font-family: var(--font-bn);
         background-color: #f8fafc;
         -webkit-font-smoothing: antialiased;
         overflow-x: hidden;
-      }
-      .font-bn {
-        font-family: var(--font-bn);
-      }
-      .font-en {
-        font-family: var(--font-en);
       }
       .smooth-transition {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -33,7 +33,6 @@
       .active-glow {
         box-shadow: 0 0 25px rgba(16, 185, 129, 0.2);
       }
-      /* Custom scrollbar */
       ::-webkit-scrollbar {
         width: 6px;
       }
@@ -61,7 +60,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- Load index.tsx module -->
     <script type="module" src="./index.tsx"></script>
   </body>
 </html>

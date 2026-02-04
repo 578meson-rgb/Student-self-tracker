@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ACTIVITIES_CONFIG } from '../constants';
 import { ActivityType } from '../types';
@@ -26,7 +25,6 @@ const ActivityGrid: React.FC<ActivityGridProps> = ({ activities, activeId, onTog
                 : 'bg-white border-slate-100 text-slate-800 shadow-sm hover:border-blue-200 hover:shadow-md hover:-translate-y-0.5'}
             `}
           >
-            {/* Active background subtle pulse */}
             {isActive && (
               <div className="absolute inset-0 bg-white/5 animate-pulse" />
             )}
@@ -39,7 +37,6 @@ const ActivityGrid: React.FC<ActivityGridProps> = ({ activities, activeId, onTog
               {activity.label}
             </span>
 
-            {/* Custom Divider */}
             <div className={`relative z-10 w-full h-[1px] my-1.5 ${isActive ? 'bg-white/30' : 'bg-slate-100'}`} />
 
             <span className={`relative z-10 text-[10px] md:text-[11px] font-mono tracking-tighter font-black ${isActive ? 'text-white/90' : 'text-slate-400'}`}>
