@@ -7,13 +7,16 @@ interface ActivityGridProps {
   activities: Record<ActivityType, number>;
   activeId: ActivityType | null;
   onToggle: (id: ActivityType) => void;
+  displaySeconds: number;
 }
 
-const ActivityGrid: React.FC<ActivityGridProps> = ({ activities, activeId, onToggle }) => {
+const ActivityGrid: React.FC<ActivityGridProps> = ({ activities, activeId, onToggle, displaySeconds }) => {
   return (
     <div className="grid grid-cols-4 gap-2 md:gap-4">
       {ACTIVITIES_CONFIG.map((activity) => {
         const isActive = activeId === activity.id;
+        const timeToShow = isActive ? displaySeconds : (activities[activity.id] || 0);
+
         return (
           <button
             key={activity.id}
@@ -41,7 +44,7 @@ const ActivityGrid: React.FC<ActivityGridProps> = ({ activities, activeId, onTog
               <div className={`w-6 h-[1.5px] mb-2 rounded-full ${isActive ? 'bg-white/40' : 'bg-slate-100'}`} />
 
               <span className={`text-[11px] md:text-[12px] font-mono tracking-tighter font-black tabular-nums ${isActive ? 'text-white' : 'text-slate-400'}`}>
-                {formatTime(activities[activity.id])}
+                {formatTime(timeToShow)}
               </span>
             </div>
 

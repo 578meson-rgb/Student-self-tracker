@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export type ActivityType = 
@@ -29,7 +28,13 @@ export interface UserProfile {
   studentClass: string;
 }
 
+export interface ActiveSession {
+  id: ActivityType;
+  startTime: number; // Date.now()
+}
+
 export interface AppState {
   profile: UserProfile | null;
   history: Record<string, DayData>; // Keyed by YYYY-MM-DD
+  activeSession: ActiveSession | null;
 }
