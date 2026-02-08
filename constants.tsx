@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { ActivityType } from './types';
 
-export const APP_LOGO_URL = "https://i.ibb.co.com/DPq766Xs/Blue-Black-Study-Book-Logo.png";
+export const APP_LOGO_URL = "https://i.ibb.co.com/jkrvZNxZ/Blue-Black-Study-Book-Logo-modified.png";
 
 export const AppLogo = ({ size = 40, className = "" }: { size?: number, className?: string }) => (
   <img 

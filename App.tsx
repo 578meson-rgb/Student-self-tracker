@@ -6,6 +6,7 @@ import ActivityGrid from './components/ActivityGrid';
 import PrayerTracker from './components/PrayerTracker';
 import Dashboard from './components/Dashboard';
 import ProfileSettings from './components/ProfileSettings';
+import Instructions from './components/Instructions';
 import { formatTime } from './utils/formatters';
 
 const STORAGE_KEY = 'student_tracker_master_v2';
@@ -21,7 +22,7 @@ const INITIAL_DAY_DATA: DayData = {
 };
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'tracker' | 'dashboard' | 'profile'>('tracker');
+  const [view, setView] = useState<'tracker' | 'dashboard' | 'profile' | 'instructions'>('tracker');
   const [history, setHistory] = useState<Record<string, DayData>>({});
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
@@ -84,7 +85,6 @@ const App: React.FC = () => {
       updateDisplay();
       timerRef.current = setInterval(updateDisplay, 1000);
       
-      // Handle returning to tab after long period
       const handleVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
           updateDisplay();
@@ -107,7 +107,6 @@ const App: React.FC = () => {
   const handleToggleActivity = (id: ActivityType) => {
     const todayKey = getTodayKey();
     
-    // If stopping an activity
     if (activeSession) {
       const elapsed = Math.floor((Date.now() - activeSession.startTime) / 1000);
       setHistory(prev => {
@@ -124,14 +123,12 @@ const App: React.FC = () => {
         };
       });
 
-      // If clicking the SAME activity, just stop
       if (activeSession.id === id) {
         setActiveSession(null);
         return;
       }
     }
 
-    // Start new activity
     setActiveSession({ id, startTime: Date.now() });
   };
 
@@ -243,6 +240,12 @@ const App: React.FC = () => {
               profile={profile} 
               onSave={(p) => { setProfile(p); setView('tracker'); }} 
             />
+          </div>
+        )}
+
+        {view === 'instructions' && (
+          <div className="animate-in fade-in zoom-in-95 duration-500">
+            <Instructions onStart={() => setView('tracker')} />
           </div>
         )}
       </main>
