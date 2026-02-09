@@ -10,12 +10,21 @@ export type ActivityType =
   | 'sports' 
   | 'other';
 
+export type PrayerState = 'completed' | 'missed' | 'pending' | 'active';
+
 export interface PrayerStatus {
-  fajr: boolean;
-  dhuhr: boolean;
-  asr: boolean;
-  maghrib: boolean;
-  isha: boolean;
+  fajr: PrayerState;
+  dhuhr: PrayerState;
+  asr: PrayerState;
+  maghrib: PrayerState;
+  isha: PrayerState;
+}
+
+export interface Task {
+  id: string;
+  text: string;
+  completed: boolean;
+  createdAt: number;
 }
 
 export interface DayData {
@@ -33,8 +42,18 @@ export interface ActiveSession {
   startTime: number; // Date.now()
 }
 
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'motivation' | 'reminder' | 'tip';
+  timestamp: number;
+}
+
 export interface AppState {
   profile: UserProfile | null;
   history: Record<string, DayData>; // Keyed by YYYY-MM-DD
   activeSession: ActiveSession | null;
+  tasks: Task[];
+  notificationsEnabled: boolean;
 }
