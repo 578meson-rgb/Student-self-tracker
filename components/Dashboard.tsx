@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { DayData, ActivityType } from '../types';
 import { ACTIVITIES_CONFIG, PRAYER_LABELS } from '../constants';
 import { formatDurationBrief } from '../utils/formatters';
-import { Calendar } from 'lucide-react';
+import { Calendar, Check } from 'lucide-react';
 
 interface DashboardProps {
   history: Record<string, DayData>;
@@ -16,7 +16,7 @@ const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'
 const Dashboard: React.FC<DashboardProps> = ({ history, selectedDate, onDateChange }) => {
   const data = history[selectedDate] || {
     activities: { self_study: 0, class: 0, mobile_scroll: 0, prayer: 0, food: 0, sleep: 0, sports: 0, other: 0 } as Record<ActivityType, number>,
-    prayers: { fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false }
+    prayers: { fajr: 'pending', dhuhr: 'pending', asr: 'pending', maghrib: 'pending', isha: 'pending' }
   };
 
   const chartData = ACTIVITIES_CONFIG
@@ -31,7 +31,9 @@ const Dashboard: React.FC<DashboardProps> = ({ history, selectedDate, onDateChan
     .filter(d => d.value > 0);
 
   const totalSeconds = ACTIVITIES_CONFIG.reduce((acc, act) => acc + (data.activities[act.id] || 0), 0);
-  const prayerCount = PRAYER_LABELS.filter(p => data.prayers[p.id]).length;
+  
+  // FIXED: Explicitly check for 'completed' string
+  const prayerCount = PRAYER_LABELS.filter(p => data.prayers[p.id] === 'completed').length;
 
   const availableDates = Object.keys(history).sort().reverse().slice(0, 30);
   const todayKey = new Date().toISOString().split('T')[0];
@@ -65,7 +67,7 @@ const Dashboard: React.FC<DashboardProps> = ({ history, selectedDate, onDateChan
           <p className="text-2xl font-black text-blue-600 font-mono">{formatDurationBrief(totalSeconds)}</p>
         </div>
         <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm text-center">
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Prayers</p>
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Prayers Done</p>
           <p className="text-2xl font-black text-green-600 font-mono">{prayerCount}/5</p>
         </div>
       </div>
@@ -123,22 +125,32 @@ const Dashboard: React.FC<DashboardProps> = ({ history, selectedDate, onDateChan
         </div>
       )}
 
-      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-        <h3 className="font-bold text-slate-700 mb-4">Prayer Summary</h3>
+      {/* FIXED: Prayer Summary UI matching the provided screenshot */}
+      <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-6">
+        <h3 className="font-black text-[#0A1D47] text-lg">Prayer Summary</h3>
         <div className="grid grid-cols-5 gap-2">
-          {PRAYER_LABELS.map(p => (
-            <div 
-              key={p.id} 
-              className={`text-center p-2 rounded-xl border text-[11px] font-black transition-all ${
-                data.prayers[p.id] ? 'bg-green-50 border-green-200 text-green-600 scale-105 shadow-sm' : 'bg-slate-50 border-slate-100 text-slate-300'
-              }`}
-            >
-              {p.label}
-              <div className="mt-1 text-base">
-                {data.prayers[p.id] ? '✓' : '✗'}
+          {PRAYER_LABELS.map(p => {
+            const isCompleted = data.prayers[p.id] === 'completed';
+            return (
+              <div 
+                key={p.id} 
+                className={`flex flex-col items-center justify-center aspect-square rounded-2xl border transition-all duration-300 ${
+                  isCompleted 
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                    : 'bg-slate-50 border-slate-100 text-slate-300'
+                }`}
+              >
+                <span className="text-[12px] font-black mb-1">{p.label}</span>
+                <div className="flex items-center justify-center">
+                  {isCompleted ? (
+                    <Check size={20} strokeWidth={4} className="animate-in zoom-in duration-300" />
+                  ) : (
+                    <span className="text-lg opacity-40">✗</span>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

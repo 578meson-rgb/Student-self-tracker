@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ActivityType, DayData, UserProfile, AppState, ActiveSession, Task, PrayerState, AppNotification } from './types';
 import Header from './components/Header';
@@ -5,16 +6,14 @@ import TrackerCard from './components/TrackerCard';
 import ActivityGrid from './components/ActivityGrid';
 import PrayerTracker from './components/PrayerTracker';
 import Dashboard from './components/Dashboard';
-import ProfileSettings from './components/ProfileSettings';
 import SettingsManager from './components/SettingsManager';
 import Instructions from './components/Instructions';
 import TodoManager from './components/TodoManager';
 import NotificationToast from './components/NotificationToast';
 import { formatTime } from './utils/formatters';
-import { PRAYER_TIMES, MOTIVATIONAL_QUOTES, STUDY_TIPS, ACTIVITIES_CONFIG } from './constants';
+import { PRAYER_TIMES, MOTIVATIONAL_QUOTES, STUDY_TIPS, ACTIVITIES_CONFIG, APP_LOGO_URL } from './constants';
 
 const STORAGE_KEY = 'student_tracker_master_v3_notifs';
-
 const getTodayKey = () => new Date().toISOString().split('T')[0];
 
 const INITIAL_DAY_DATA: DayData = {
@@ -38,7 +37,7 @@ const App: React.FC = () => {
   const [permissionStatus, setPermissionStatus] = useState<NotificationPermission>("default");
 
   const timerRef = useRef<any>(null);
-  const lastInteractionRef = useRef<number>(Date.now());
+  const backgroundIntervalRef = useRef<any>(null);
   const backgroundNotifRef = useRef<Notification | null>(null);
 
   // Load data
@@ -54,9 +53,7 @@ const App: React.FC = () => {
         if (parsed.activeSession) {
           setActiveSession(parsed.activeSession);
         }
-      } catch (e) {
-        console.error("Failed to load saved data", e);
-      }
+      } catch (e) { console.error("Data load error", e); }
     }
     if ("Notification" in window) {
       setPermissionStatus(Notification.permission);
@@ -66,103 +63,102 @@ const App: React.FC = () => {
   // Save data
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ 
-      profile, 
-      history,
-      activeSession,
-      tasks,
-      notificationsEnabled: notifsEnabled
+      profile, history, activeSession, tasks, notificationsEnabled: notifsEnabled
     }));
   }, [history, profile, activeSession, tasks, notifsEnabled]);
 
-  // System Notification Helper
-  const sendSystemNotification = (title: string, body: string, tag?: string) => {
-    if (notifsEnabled && "Notification" in window && Notification.permission === "granted") {
-      try {
-        const notif = new Notification(title, { 
-          body, 
-          icon: 'https://i.ibb.co.com/jkrvZNxZ/Blue-Black-Study-Book-Logo-modified.png',
-          tag: tag || 'general',
-          silent: false
-        });
-        return notif;
-      } catch (e) {
-        console.error("Notification creation failed", e);
-      }
+  // SYSTEM NOTIFICATION DISPATCHER
+  const sendSystemNotification = (title: string, body: string, isTimer = false) => {
+    if (!notifsEnabled || !("Notification" in window) || Notification.permission !== "granted") return null;
+    
+    try {
+      // Use 'tag' to ensure we only have ONE timer notification in the tray at a time
+      // Use type assertion 'as any' because 'renotify' might not be in the default NotificationOptions type definition in some TS environments
+      const notif = new Notification(title, { 
+        body, 
+        icon: APP_LOGO_URL,
+        tag: isTimer ? 'timer-status' : 'general-alert',
+        renotify: isTimer ? false : true, // Don't buzz every minute for the timer
+        silent: isTimer // Keep background timer silent to avoid annoying the user
+      } as any);
+      return notif;
+    } catch (e) {
+      console.warn("Notification error:", e);
+      return null;
     }
-    return null;
   };
 
-  // Background Visibility Tracking
+  // BACKGROUND HEARTBEAT - This is what shows the timer in the mobile notification bar
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden' && activeSession) {
-        const label = ACTIVITIES_CONFIG.find(a => a.id === activeSession.id)?.label || 'Activity';
-        const elapsed = formatTime(displaySeconds);
-        backgroundNotifRef.current = sendSystemNotification(
-          `⏱️ Still Tracking: ${label}`, 
-          `Current time: ${elapsed}. We're still recording your progress, ${profile?.name || 'Student'}!`,
-          'timer-notif'
-        );
-      } else if (document.visibilityState === 'visible') {
-        if (backgroundNotifRef.current) {
-          backgroundNotifRef.current.close();
-          backgroundNotifRef.current = null;
-        }
+        const updateBackgroundNotif = () => {
+          const label = ACTIVITIES_CONFIG.find(a => a.id === activeSession.id)?.label || 'Activity';
+          const elapsed = formatTime(displaySeconds);
+          sendSystemNotification(
+            `⏱️ ${label} Active`, 
+            `Current Duration: ${elapsed}. Focus on your goals, ${profile?.name || 'Student'}!`,
+            true
+          );
+        };
+
+        // Send initial notification when user leaves
+        updateBackgroundNotif();
+
+        // Heartbeat: Update the notification every 60 seconds while app is in background
+        backgroundIntervalRef.current = setInterval(updateBackgroundNotif, 60000);
+      } else {
+        // App is back in focus - stop background pings and clear system tray
+        if (backgroundIntervalRef.current) clearInterval(backgroundIntervalRef.current);
+        // We can't programmatically clear all specific system notifications easily without a service worker,
+        // but stopping the re-send cycle is the most important part.
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (backgroundIntervalRef.current) clearInterval(backgroundIntervalRef.current);
+    };
   }, [activeSession, displaySeconds, profile, notifsEnabled]);
 
   const requestPermission = async () => {
-    if ("Notification" in window) {
+    if (!("Notification" in window)) {
+      alert("This browser does not support system notifications.");
+      return;
+    }
+
+    try {
+      // Compatibility wrapper for older browsers
       const status = await Notification.requestPermission();
       setPermissionStatus(status);
+      
       if (status === 'granted') {
-        sendSystemNotification("Success!", "Notifications are now active for your study tracker.");
+        sendSystemNotification("Access Granted! 🎉", "You will now see timer updates in your phone's notification bar.");
+      } else if (status === 'denied') {
+        console.log("Permission denied by user.");
       }
+    } catch (err) {
+      // Fallback for very old Safari
+      Notification.requestPermission((status: NotificationPermission) => {
+        setPermissionStatus(status);
+      });
     }
   };
 
   const testNotification = () => {
-    sendSystemNotification("Test Success!", "This is what your background study notifications will look like.");
+    sendSystemNotification("Timer Test", "This is how the timer will look in your notification bar when you leave the app!");
   };
 
-  // Toast logic
+  // Toast logic (UI only)
   const addToastNotification = (title: string, message: string, type: AppNotification['type']) => {
     if (!notifsEnabled) return;
     const newNotif: AppNotification = {
       id: Math.random().toString(36).substr(2, 9),
-      title,
-      message,
-      type,
-      timestamp: Date.now()
+      title, message, type, timestamp: Date.now()
     };
     setNotifications(prev => [newNotif, ...prev].slice(0, 3));
   };
-
-  // Background Quote/Tip Interval
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!notifsEnabled || document.visibilityState === 'hidden') return;
-
-      const rand = Math.random();
-      if (activeSession?.id === 'self_study' || activeSession?.id === 'class') {
-        if (rand > 0.7) {
-          const tip = STUDY_TIPS[Math.floor(Math.random() * STUDY_TIPS.length)];
-          addToastNotification("Study Tip", tip, "tip");
-        }
-      } else {
-        if (rand > 0.8) {
-          const quote = MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)];
-          addToastNotification("Motivation", quote, "motivation");
-        }
-      }
-    }, 15 * 60 * 1000); 
-
-    return () => clearInterval(interval);
-  }, [activeSession, notifsEnabled]);
 
   // Prayer Logic
   useEffect(() => {
@@ -170,36 +166,19 @@ const App: React.FC = () => {
       const now = new Date();
       const todayKey = getTodayKey();
       const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      
       setHistory(prev => {
         const day = prev[todayKey] || { ...INITIAL_DAY_DATA };
         let changed = false;
         const newPrayers = { ...day.prayers };
-
         (Object.keys(PRAYER_TIMES) as Array<keyof typeof PRAYER_TIMES>).forEach(key => {
           const range = PRAYER_TIMES[key];
-          const currentStatus = newPrayers[key];
-          if (currentStatus === 'completed') return;
-          if (currentTimeStr > range.end) {
-            if (currentStatus !== 'missed') {
-              newPrayers[key] = 'missed';
-              changed = true;
-            }
-          } else if (currentTimeStr >= range.start && currentTimeStr <= range.end) {
-            if (currentStatus !== 'active') {
-              newPrayers[key] = 'active';
-              changed = true;
-            }
-          } else {
-             if (currentStatus !== 'pending') {
-               newPrayers[key] = 'pending';
-               changed = true;
-             }
-          }
+          const cur = newPrayers[key];
+          if (cur === 'completed') return;
+          const status: PrayerState = currentTimeStr > range.end ? 'missed' : 
+                                      (currentTimeStr >= range.start ? 'active' : 'pending');
+          if (cur !== status) { newPrayers[key] = status; changed = true; }
         });
-
-        if (!changed) return prev;
-        return { ...prev, [todayKey]: { ...day, prayers: newPrayers } };
+        return changed ? { ...prev, [todayKey]: { ...day, prayers: newPrayers } } : prev;
       });
     };
     const interval = setInterval(checkPrayers, 30000);
@@ -209,42 +188,28 @@ const App: React.FC = () => {
 
   // Timer logic
   useEffect(() => {
+    if (!activeSession) { setDisplaySeconds(0); return; }
     const updateDisplay = () => {
-      if (!activeSession) {
-        setDisplaySeconds(0);
-        return;
-      }
-      const todayKey = getTodayKey();
-      const currentDay = history[todayKey] || INITIAL_DAY_DATA;
-      const baseDuration = currentDay.activities[activeSession.id] || 0;
-      const elapsedSinceStart = Math.floor((Date.now() - activeSession.startTime) / 1000);
-      setDisplaySeconds(baseDuration + elapsedSinceStart);
+      const curDay = history[getTodayKey()] || INITIAL_DAY_DATA;
+      const base = curDay.activities[activeSession.id] || 0;
+      const elapsed = Math.floor((Date.now() - activeSession.startTime) / 1000);
+      setDisplaySeconds(base + elapsed);
     };
-
-    if (activeSession) {
-      updateDisplay();
-      timerRef.current = setInterval(updateDisplay, 1000);
-      return () => clearInterval(timerRef.current);
-    }
+    updateDisplay();
+    timerRef.current = setInterval(updateDisplay, 1000);
+    return () => clearInterval(timerRef.current);
   }, [activeSession, history]);
 
   const currentDayData = history[getTodayKey()] || INITIAL_DAY_DATA;
   const totalTrackedSeconds = (Object.values(currentDayData.activities) as number[]).reduce((a: number, b: number) => a + b, 0);
 
   const handleToggleActivity = (id: ActivityType) => {
-    lastInteractionRef.current = Date.now();
     const todayKey = getTodayKey();
     if (activeSession) {
       const elapsed = Math.floor((Date.now() - activeSession.startTime) / 1000);
       setHistory(prev => {
         const day = prev[todayKey] || { ...INITIAL_DAY_DATA };
-        return {
-          ...prev,
-          [todayKey]: {
-            ...day,
-            activities: { ...day.activities, [activeSession.id]: (day.activities[activeSession.id] || 0) + elapsed }
-          }
-        };
+        return { ...prev, [todayKey]: { ...day, activities: { ...day.activities, [activeSession.id]: (day.activities[activeSession.id] || 0) + elapsed } } };
       });
       if (activeSession.id === id) {
         setActiveSession(null);
@@ -253,35 +218,28 @@ const App: React.FC = () => {
       }
     }
     setActiveSession({ id, startTime: Date.now() });
-    addToastNotification("Session Started", `Tracking: ${id.replace('_', ' ')}`, "reminder");
+    addToastNotification("Session Started", `Now tracking: ${id.replace('_', ' ')}`, "reminder");
   };
 
   const handlePrayerChange = (key: keyof DayData['prayers']) => {
-    lastInteractionRef.current = Date.now();
     const todayKey = getTodayKey();
-    const currentStatus = currentDayData.prayers[key];
-    if (currentStatus !== 'active' && currentStatus !== 'completed') return;
-
+    if (currentDayData.prayers[key] !== 'active' && currentDayData.prayers[key] !== 'completed') return;
     setHistory(prev => {
       const day = prev[todayKey] || { ...INITIAL_DAY_DATA };
-      const nextState: PrayerState = day.prayers[key] === 'completed' ? 'active' : 'completed';
-      if (nextState === 'completed') {
-        addToastNotification("Great Job!", `You've completed your ${key} prayer.`, "motivation");
-      }
-      return { ...prev, [todayKey]: { ...day, prayers: { ...day.prayers, [key]: nextState } } };
+      const next: PrayerState = day.prayers[key] === 'completed' ? 'active' : 'completed';
+      if (next === 'completed') addToastNotification("Great Job!", `Prayer ${key} recorded.`, "motivation");
+      return { ...prev, [todayKey]: { ...day, prayers: { ...day.prayers, [key]: next } } };
     });
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-20 overflow-x-hidden" onClick={() => lastInteractionRef.current = Date.now()}>
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-20 overflow-x-hidden">
       <Header activeTab={view} onTabChange={setView} profile={profile} />
-
       <main className="max-w-xl mx-auto px-4 pt-8">
         <NotificationToast 
           notifications={notifications} 
           removeNotification={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} 
         />
-
         {view === 'tracker' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-top-6 duration-700">
             <div className="text-center space-y-2">
@@ -292,31 +250,23 @@ const App: React.FC = () => {
                  </span>
               </div>
             </div>
-
             <TrackerCard 
               activeActivity={activeSession?.id || null} 
               currentTime={displaySeconds || (activeSession ? currentDayData.activities[activeSession.id] : 0)} 
               onFinish={() => activeSession && handleToggleActivity(activeSession.id)}
             />
-
             <ActivityGrid 
               activities={currentDayData.activities}
               activeId={activeSession?.id || null}
               onToggle={handleToggleActivity}
               displaySeconds={displaySeconds}
             />
-
-            <PrayerTracker 
-              status={currentDayData.prayers}
-              onChange={handlePrayerChange}
-            />
+            <PrayerTracker status={currentDayData.prayers} onChange={handlePrayerChange} />
           </div>
         )}
-
         {view === 'todo' && <TodoManager tasks={tasks} setTasks={setTasks} />}
         {view === 'dashboard' && <Dashboard history={history} selectedDate={selectedDate} onDateChange={setSelectedDate} />}
         {view === 'instructions' && <Instructions onStart={() => setView('tracker')} />}
-        
         {view === 'settings' && (
           <SettingsManager 
             profile={profile} 
@@ -327,20 +277,6 @@ const App: React.FC = () => {
             requestPermission={requestPermission}
             onTestNotif={testNotification}
           />
-        )}
-
-        {view === 'profile' && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <ProfileSettings 
-              profile={profile} 
-              onSave={(p) => { setProfile(p); setView('tracker'); }} 
-              notifsEnabled={notifsEnabled}
-              setNotifsEnabled={setNotifsEnabled}
-              permissionStatus={permissionStatus}
-              requestPermission={requestPermission}
-              onTestNotif={testNotification}
-            />
-          </div>
         )}
       </main>
     </div>

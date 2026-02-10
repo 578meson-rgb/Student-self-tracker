@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { UserProfile } from '../types';
 import { 
   User, 
@@ -11,7 +11,8 @@ import {
   Zap,
   Settings as SettingsIcon,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  Loader2
 } from 'lucide-react';
 
 interface SettingsManagerProps {
@@ -35,6 +36,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
 }) => {
   const [name, setName] = React.useState(profile?.name || '');
   const [studentClass, setStudentClass] = React.useState(profile?.studentClass || '');
+  const [isRequesting, setIsRequesting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,13 +45,20 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
     }
   };
 
+  const handleRequest = async () => {
+    setIsRequesting(true);
+    await requestPermission();
+    // Give it a small delay so user sees the "Processing" state
+    setTimeout(() => setIsRequesting(false), 500);
+  };
+
   return (
     <div className="space-y-6 pb-20 animate-in fade-in slide-in-from-bottom-6 duration-500">
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-black text-[#0A1D47] tracking-tighter uppercase italic flex items-center justify-center gap-3">
           <SettingsIcon size={32} /> App Settings
         </h2>
-        <p className="text-slate-500 font-medium text-sm">Customize your tracking experience</p>
+        <p className="text-slate-500 font-medium text-sm">Control your app experience</p>
       </div>
 
       {/* 1. Identity Card */}
@@ -104,7 +113,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
 
         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
           <div className="space-y-0.5">
-            <p className="text-xs font-black text-slate-700 uppercase">App Toasts</p>
+            <p className="text-xs font-black text-slate-700 uppercase">Feature Toasts</p>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">Motivational popup messages</p>
           </div>
           <button 
@@ -120,7 +129,7 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
             onClick={onTestNotif}
             className="w-full py-3 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] border border-blue-100 hover:bg-blue-100 transition-all flex items-center justify-center gap-2"
           >
-            <Zap size={14} /> Send Test Notification
+            <Zap size={14} /> Send Test System Notif
           </button>
         )}
       </div>
@@ -137,8 +146,8 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <p className="text-xs font-black text-slate-700 uppercase">Browser Permissions</p>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">For background timer tracking</p>
+              <p className="text-xs font-black text-slate-700 uppercase">Background Tracking</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">For notifications outside the app</p>
             </div>
             {permissionStatus === 'granted' ? (
               <div className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
@@ -146,14 +155,15 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
               </div>
             ) : (
               <button 
-                onClick={requestPermission}
-                disabled={permissionStatus === 'denied'}
-                className={`text-[10px] font-black px-6 py-2 rounded-xl uppercase tracking-widest transition-all ${
+                onClick={handleRequest}
+                disabled={permissionStatus === 'denied' || isRequesting}
+                className={`text-[10px] font-black px-6 py-2 rounded-xl uppercase tracking-widest transition-all flex items-center gap-2 ${
                   permissionStatus === 'denied' 
-                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50' 
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
                   : 'bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-90'
                 }`}
               >
+                {isRequesting ? <Loader2 size={12} className="animate-spin" /> : null}
                 {permissionStatus === 'denied' ? 'Access Denied' : 'Grant Access'}
               </button>
             )}
@@ -163,21 +173,23 @@ const SettingsManager: React.FC<SettingsManagerProps> = ({
             <div className="p-6 bg-red-50 rounded-[2rem] border border-red-100 space-y-4">
               <div className="flex items-center gap-3 text-red-600">
                 <AlertCircle size={20} strokeWidth={3} />
-                <p className="text-xs font-black uppercase tracking-tight">Permissions are blocked</p>
+                <p className="text-xs font-black uppercase tracking-tight italic underline">Permissions are Blocked!</p>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <p className="text-[11px] text-slate-600 font-bold leading-relaxed">
-                  Your browser is preventing us from sending you background timer updates. To fix this:
+                  You blocked notifications earlier. Since the button can't ask you again, you must fix it manually:
                 </p>
-                <ol className="text-[10px] font-black text-slate-500 uppercase list-decimal list-inside space-y-1 ml-1">
-                  <li>Click the <span className="text-red-500">Lock icon (🔒)</span> next to the URL.</li>
-                  <li>Find <span className="text-red-500">Notifications</span>.</li>
-                  <li>Switch the toggle to <span className="text-blue-600">Allow</span>.</li>
-                </ol>
+                <div className="space-y-2 bg-white/50 p-4 rounded-xl border border-red-50">
+                   <p className="text-[10px] font-black text-slate-700 uppercase">📱 Mobile (Chrome/Safari):</p>
+                   <p className="text-[10px] text-slate-500 font-medium">Click the <span className="text-red-500 font-black">Lock Icon (🔒)</span> in the address bar → Site Settings → Notifications → <span className="text-blue-600 font-black">Allow</span>.</p>
+                   
+                   <p className="text-[10px] font-black text-slate-700 uppercase mt-3">💻 Desktop:</p>
+                   <p className="text-[10px] text-slate-500 font-medium">Click the <span className="text-red-500 font-black">Lock Icon (🔒)</span> next to the website link → Toggle <span className="text-blue-600 font-black">Notifications</span> ON.</p>
+                </div>
               </div>
-              <div className="pt-2 border-t border-red-100 flex items-center justify-between">
-                <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">Manual Fix Required</span>
-                <ExternalLink size={14} className="text-red-300" />
+              <div className="pt-2 flex items-center justify-between text-[9px] font-black text-red-400 uppercase tracking-widest">
+                <span>Refresh app after fixing</span>
+                <ExternalLink size={14} className="opacity-50" />
               </div>
             </div>
           )}
